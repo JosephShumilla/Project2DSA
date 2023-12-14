@@ -1,94 +1,80 @@
-#include "AVL.h"
 #include <iostream>
-#include <string>
-#include <sstream>
-using namespace std;
+#include <iomanip>
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <set>
+class AdjacencyList{
+    //Adjacency list class
+private:
+    std::map<std::string, std::vector<std::pair<std::string, int>>> graph; //A map used to take in all nodes that are input
+    int pages = 0;
+    std::map<std::string, int> outDegreeMap;
+    std::map<std::string, int> inDegreeMap;
+    std::map<std::string, double> pageRanks;// Map that stores the PageRank of each node
+    std::set <std::string> totalPages;
+
+public:
+    void addEdge(const std::string& from, const std::string& to, int weight = 1){  //Function used to add edges to the graph map
+        graph[from].push_back(std::make_pair(to, weight));
+        if(graph.find(to) == graph.end()){
+            graph[to];
+        }
+        totalPages.insert(from);
+        totalPages.insert(to);
+        outDegreeMap[from]++;// Increment the out-degree of 'from' node
+        inDegreeMap[to]++;
+
+    }
+
+    void pageRank(int p);
+};
+
+void AdjacencyList::pageRank(int power_iterations){  //Function that ranks the pages
+    // Step 1: Initialize PageRank values
+    double initRank = 1.0 / totalPages.size();
+    for(auto& iter : graph){
+        pageRanks[iter.first] = initRank;
+    }
+
+    // Temporary map to store updated values
+    std::map<std::string, double> tempRanks;
+
+    // Step 2: Iterate to update PageRank
+    for(int i = 0; i < power_iterations-1; i++){
+        for(auto& iter : graph){
+            tempRanks[iter.first] = 0;
+        }
+
+        for(auto& iter : graph){
+            auto& from = iter.first;
+            auto& edges = iter.second;
+            for(auto& edge : edges){
+                auto& to = edge.first;
+                tempRanks[to] += pageRanks[from] / outDegreeMap[from];
+            }
+        }
+        // Update the PageRanks with new values
+        pageRanks = tempRanks;
+    }
+    // Step 3: Prints the PageRanks in alphabetical order
+    std::vector<std::pair<std::string, double>> sortedRanks(pageRanks.begin(), pageRanks.end());
+    std::sort(sortedRanks.begin(), sortedRanks.end());
+
+    for(auto& pair : sortedRanks){
+        std::cout << pair.first << " " << std::fixed << std::setprecision(2) << pair.second << std::endl;
+    }
+}
 
 int main() {
-    AVLTree avlTree;
- // Making tree object, taking in number of commands
-    int numCommands = 0;
-    cin >> numCommands;
+    int no_of_lines, power_iterations;
+    std::string from, to;
+    std::cin >> no_of_lines >> power_iterations; //Taking in the input
+    AdjacencyList graph;
 
-    for (int i = 0; i < numCommands; ++i) {
-        string function, name, id;
-        string line;
-        getline(cin >> ws, line);
-
-        istringstream in(line);
-        in >> function;
-
-        //Taking in the first command which is a function call
-
-        if (function == "insert") { //Checking if the input entered is insert
-            in >> name;
-            name = name.substr(1, name.length() -2);
-            bool isValid = true;
-            for(char c : name){
-                if(!isalpha(c)){
-                    isValid = false;
-                }
-            }
-            in >> id;
-            bool isNum = true;
-            for(char c: id){
-                if(!isdigit(c)){
-                    isNum = false;
-                }
-            }
-            if(isValid && isNum){
-                avlTree.Insert(name, id);
-            } else {
-                cout << "unsuccessful" << endl;
-            }
-        } else if (function == "remove") { //Checking if the input is calling remove
-            in >> id;
-            bool isNum = true;
-            for (char c: id) {
-                if (!isdigit(c)) {
-                    isNum = false;
-                }
-            }
-            if(isNum){
-                avlTree.Remove(id);
-            } else{
-                cout << "unsuccessful" << endl;
-            }
-        }
-        else if (function == "search") { //Checking if the input is calling search
-            in >> name;
-            if(name.substr(0,1) == "\"") { // Checking to see if we are searching by name
-                name = name.substr(1, name.length()-2);
-                avlTree.SearchName(name);
-            } else{  // Else, we search ID
-                avlTree.SearchID(name);
-            }
-        }
-        else if (function == "printInorder") { //Checking to see if the input is calling printInorder
-            avlTree.PrintInorder();
-            cout << endl;
-        }
-        else if (function == "printPreorder") {
-            avlTree.PrintPreOrder();
-            cout << endl;
-        }
-        else if (function == "printPostorder") {
-            avlTree.PrintPostOrder();
-            cout << endl;
-        }
-        else if (function == "printLevelCount") {
-            avlTree.PrintLevelCount();
-            cout << endl;
-        }
-        else if (function == "removeInorder") { //Checking to see if the input is calling removeInorder
-            int n;
-            in >> n;
-            avlTree.removeInorderN(n);
-        }
-        else {
-            cout << "unsuccessful" << endl;
-            continue; // Continue to the next iteration of the loop
-        }
+    for(int i = 0; i < no_of_lines; i++) {
+        std::cin >> from >> to;
+        graph.addEdge(from, to);
     }
-    return 0;
+    graph.pageRank(power_iterations);
 }
